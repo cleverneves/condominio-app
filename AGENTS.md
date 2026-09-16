@@ -7,3 +7,17 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+# Contexto do projeto
+
+- Visão do produto: `docs/project-overview.md`
+- Arquitetura técnica: `docs/architecture.md`
+  Considere esses ddocumentos como fontes da verdade. Se o código divergir deles, sinalize a incosistência antes de ampliar a divergência.
+
+# Diretrizes essenciais
+
+- Preserve a separação entre as áreas de funcionário e morador.
+- Nunca exponha `SUPABASE_SERVICE_ROLE_KEY` ou o admni client ao navegador.
+- Valide entradas externas com Zod.
+- Prefira Servere Components; Use Cliente Components somente quando necessário.
+- Siga o padrão de páginas definindo em: `.cursor/rules/page-rules.mdc`

@@ -36,7 +36,8 @@ Lógica compartilhada entre páginas mora em `src/lib/`:
 - `lib/ocorrencia.ts` — categorias/locais fixos, transições de status
   permitidas para o administrativo, validação de imagens.
 - `lib/occurrences/actions.ts` — Server Actions de ocorrência usadas por
-  mais de uma rota (abrir, editar, cancelar, comentar, mudar status).
+  mais de uma rota (abrir, editar, cancelar, comentar, apagar o próprio
+  comentário, mudar status).
 - `lib/occurrences/queries.ts` — leitura do detalhe completo de uma
   ocorrência (dados, imagens, comentários, autor).
 - `lib/perfil.ts` — rótulos de perfil e helper `isMorador(role)`.

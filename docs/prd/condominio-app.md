@@ -28,7 +28,7 @@ A interface é obrigatória: seguir **`docs/DESIGN.md`** (sistema visual CondoRe
 - O dashboard mostra **totais por status** além da lista e dos filtros (sem totais, o “dashboard” vira só uma lista).
 - Desativar morador inclui **reativar**.
 - “Esqueci a senha” **não envia e-mail**; o login orienta a procurar a administração, que redefine a senha.
-- Comentários **não são editados nem apagados** depois de enviados.
+- Comentários **não são editados**; a partir da revisão da Regra 16, o **próprio autor** pode apagar (soft delete) o comentário que escreveu.
 - Cancelar pede **confirmação**.
 - Filtro por bloco usa o **bloco cadastrado no morador autor**, não o campo “local” da ocorrência.
 - Editar ocorrência pendente permite alterar os **mesmos campos da abertura** (título, detalhes, categoria, local e imagens).
@@ -106,7 +106,7 @@ Entregar o ciclo completo de uma ocorrência em **um condomínio**: o administra
 - Regra 13: Categorias fixas: Reclamação, Obra, Importunação, Hidráulica, Elétrica.
 - Regra 14: Locais fixos: Apartamento, Área comum, Praça, Garagem, Portaria.
 - Regra 15: No máximo 3 imagens por ocorrência; cada uma JPEG ou PNG, até 5 MB. Quem pode ver a ocorrência pode ver as imagens.
-- Regra 16: Comentários são permitidos em **qualquer** status, inclusive resolvida e cancelada. Depois de enviado, o comentário não se edita nem se apaga.
+- Regra 16 (revisada): Comentários são permitidos em **qualquer** status, inclusive resolvida e cancelada. Depois de enviado, o comentário não se edita, mas o **próprio autor** (morador ou administrativo) pode **apagar** o comentário que escreveu, em qualquer status e sem janela de tempo — nunca o de outra pessoa. O comentário apagado some para leitura (a UI mostra um placeholder "Comentário removido"), mas não é excluído do banco (soft delete).
 - Regra 17: O filtro por bloco no dashboard usa o bloco do **morador que abriu** a ocorrência.
 - Regra 18: Quem esqueceu a senha procura a administração; o administrativo redefine. O sistema não envia e-mail.
 
@@ -633,16 +633,16 @@ Specs:
 ### Spec 10 — Comentários na ocorrência
 
 - **Fase:** Fase 5 — Comunicação
-- **Objetivo (o quê):** Morador (nas ocorrências dele) e administrativo (em qualquer uma) leem e enviam comentários em texto, em **qualquer** status, em ordem cronológica, sem editar ou apagar depois de enviado.
+- **Objetivo (o quê):** Morador (nas ocorrências dele) e administrativo (em qualquer uma) leem e enviam comentários em texto, em **qualquer** status, em ordem cronológica, sem editar depois de enviado; o próprio autor pode apagar (soft delete) o comentário que escreveu.
 - **Intenção (por quê):** Status sozinho não explica (“vamos amanhã na vistoria”). O fio de comentários substitui o vai-e-vem do WhatsApp **dentro** do chamado, inclusive para um recado depois de resolvido ou cancelado.
 - **Contexto:** Detalhe do morador (Spec 06) e detalhe administrativo (Spec 09) já existem. Ambos passam a exibir o mesmo histórico de comentários daquela ocorrência, **dentro da gaveta/modal de detalhe**. Não é chat ao vivo: o usuário envia e o outro vê quando abrir de novo (sem notificação — fora do escopo). Não usar a timeline “Aberto → Notificado → Em vistoria” do DESIGN.md como fio de comentários.
 - **Atores:** Morador autor; funcionário administrativo.
-- **Descrição do comportamento:** No detalhe da ocorrência, há a lista de comentários (autor, data/hora, texto) da mais antiga para a mais recente (leitura natural de conversa) e um campo para novo comentário. Enviar um texto não vazio grava o comentário associado à ocorrência e ao usuário logado, e a lista atualiza. Morador só comenta se for o **autor**. Administrativo comenta em qualquer ocorrência. Permitido em Pendente, Em andamento, Resolvida e Cancelada. Depois de enviado, não há editar nem apagar. Comentário não muda o status. Lista vazia: estado “ainda não há comentários”. Recusa texto só com espaços. Se o morador tentar comentar ocorrência alheia, recusa (ele nem deveria ver o detalhe).
+- **Descrição do comportamento:** No detalhe da ocorrência, há a lista de comentários (autor, data/hora, texto) da mais antiga para a mais recente (leitura natural de conversa) e um campo para novo comentário. Enviar um texto não vazio grava o comentário associado à ocorrência e ao usuário logado, e a lista atualiza. Morador só comenta se for o **autor**. Administrativo comenta em qualquer ocorrência. Permitido em Pendente, Em andamento, Resolvida e Cancelada. Depois de enviado, não há editar. Cada comentário próprio tem um ícone de apagar, sempre visível; apagar pede confirmação explícita (mesmo padrão de cancelar ocorrência) e, uma vez confirmado, não tem desfazer. O comentário apagado (soft delete) vira um texto genérico “Comentário removido” no lugar do corpo, mantendo autor e data/hora, para quem já viu e para quem vier a ver depois; a linha e o texto original continuam no banco, só ocultos na UI. Vale em qualquer status e sem janela de tempo. Ninguém apaga comentário de outra pessoa (nem administrativo apaga o do morador, nem o contrário). Comentário não muda o status. Lista vazia: estado “ainda não há comentários”. Recusa texto só com espaços. Se o morador tentar comentar ocorrência alheia, recusa (ele nem deveria ver o detalhe).
 - **Entradas e saídas:**
   - Entrada: texto do comentário; ocorrência; usuário logado.
   - Saída: comentário persistido visível para quem pode ver a ocorrência; ou recusa.
 - **Dados/entidades envolvidos (conceitual):** Comentário: texto, autor (nome e perfil), data/hora, ocorrência ligada.
-- **Estados e transições:** Não se aplica ao status da ocorrência. Comentário: não existia → enviado (estado final; imutável).
+- **Estados e transições:** Não se aplica ao status da ocorrência. Comentário: não existia → enviado → (opcional, só pelo próprio autor) apagado. Apagado é final: não volta a enviado, nem edita o texto depois.
 - **Regras de negócio:** Regras 8 e 16.
 - **Validações:** Texto obrigatório, não só espaços. Usuário com permissão de ver a ocorrência. Morador = autor. Administrativo = qualquer ocorrência existente.
 - **Fluxo do usuário (passo a passo):**
@@ -653,20 +653,25 @@ Specs:
 - **Casos de borda e erros:**
   - Texto vazio: não envia.
   - Ocorrência cancelada ou resolvida: ainda envia e ainda lê.
-  - Muitos comentários: todos permanecem, em ordem do tempo.
+  - Muitos comentários: todos permanecem, em ordem do tempo (inclusive os apagados, como placeholder).
   - Morador em ocorrência de outro: não vê e não comenta.
   - Falha ao gravar: mensagem de erro; o texto não some sem aviso se possível, ou o usuário percebe que não enviou.
   - Não há notificação ao outro lado; o outro só vê ao abrir o detalhe.
-- **Impacto no existente:** Acrescenta conversa aos detalhes das Specs 06 e 09, sem alterar regras de status.
+  - Autor apaga o próprio comentário: some o texto para todos que veem a ocorrência (incluindo quem já tinha lido antes), sem aviso ao outro lado além do que aparecer no detalhe.
+  - Alguém tenta apagar comentário de outra pessoa (via chamada direta à ação, contornando a UI): recusado pela RLS, nenhuma linha é alterada.
+  - Falha ao apagar: mensagem de erro; o comentário continua visível normalmente.
+- **Impacto no existente:** Acrescenta conversa aos detalhes das Specs 06 e 09, sem alterar regras de status; acrescenta a exclusão (soft) do próprio comentário.
 - **Critérios de aceite (Dado/Quando/Então):**
   - Dado uma ocorrência do morador, quando o administrativo envia um comentário e o morador abre o detalhe, então o morador lê o texto, quem escreveu e quando.
   - Dado a mesma ocorrência, quando o morador responde, então o administrativo vê a resposta no detalhe dela.
   - Dado uma ocorrência Resolvida, quando qualquer um dos dois envia comentário, então o comentário é gravado e o status permanece Resolvida.
-  - Dado um comentário já enviado, quando o autor tenta alterá-lo ou apagá-lo, então essa ação não existe / é recusada.
+  - Dado um comentário já enviado, quando o autor tenta editá-lo, então essa ação não existe.
+  - Dado um comentário já enviado pelo próprio usuário logado, quando ele confirma apagar, então o comentário passa a exibir “Comentário removido” para todos que veem a ocorrência, e o texto original não é mais editável nem restaurável.
+  - Dado um comentário de outra pessoa, quando alguém tenta apagá-lo (fora da UI, direto na ação/banco), então é recusado e o comentário permanece intacto.
   - Dado um morador, quando tenta comentar ocorrência que não é dele, então é recusado.
-- **Definição de pronto:** Os dois lados conversam no mesmo histórico, em qualquer status, sem editar/apagar e sem o morador falar em chamado alheio.
+- **Definição de pronto:** Os dois lados conversam no mesmo histórico, em qualquer status, sem editar comentário, cada um apagando só o próprio quando quiser, e sem o morador falar em chamado alheio.
 - **Dependências:** Spec 06 e Spec 09 — os dois detalhes onde a conversa aparece. Spec 04 — a ocorrência precisa existir.
-- **Fora do escopo desta spec:** Notificação por e-mail/push. Comentário com imagem. Edição/exclusão. Chat instantâneo. Comentário mudando status automaticamente.
+- **Fora do escopo desta spec:** Notificação por e-mail/push. Comentário com imagem. Edição de comentário. Apagar comentário de terceiros. Restaurar comentário apagado. Chat instantâneo. Comentário mudando status automaticamente.
 
 ## 15. Ordem recomendada de implementação
 

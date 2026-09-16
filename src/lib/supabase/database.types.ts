@@ -126,13 +126,18 @@ export interface Database {
           author_id: string;
           body: string;
           created_at: string;
+          deleted_at: string | null;
         };
         Insert: {
           occurrence_id: number;
           author_id: string;
           body: string;
         };
-        Update: never;
+        // Unico UPDATE permitido pelo trigger/RLS (00009): soft delete
+        // do proprio autor, definindo deleted_at. Nenhum outro campo.
+        Update: {
+          deleted_at: string;
+        };
         Relationships: [
           {
             foreignKeyName: "occurrence_comments_occurrence_id_fkey";

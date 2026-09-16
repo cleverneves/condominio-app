@@ -35,7 +35,8 @@ de senha por e-mail (quem esquece procura a administração).
   ocorrências, filtros por bloco/categoria/status, detalhe com dados do
   autor e mudança de status.
 - Comentários na ocorrência (morador autor e administrativo), em qualquer
-  status, imutáveis após o envio.
+  status, sem edição; o próprio autor pode apagar (soft delete) o
+  comentário que escreveu.
 
 ## Ciclo de vida da ocorrência
 

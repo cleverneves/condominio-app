@@ -29,6 +29,7 @@ export interface OcorrenciaComentario {
   author_id: string;
   autor_nome: string;
   autor_role: Role;
+  deleted_at: string | null;
 }
 
 export interface OcorrenciaDetalhe extends OcorrenciaRow {
@@ -123,7 +124,7 @@ export async function getOcorrenciaDetalhe(
   const { data: comentariosRaw } = await supabase
     .from("occurrence_comments")
     .select(
-      "id, body, created_at, author_id, autor:profiles!occurrence_comments_author_id_fkey(full_name, role)"
+      "id, body, created_at, author_id, deleted_at, autor:profiles!occurrence_comments_author_id_fkey(full_name, role)"
     )
     .eq("occurrence_id", id)
     .order("created_at", { ascending: true });
@@ -133,6 +134,7 @@ export async function getOcorrenciaDetalhe(
     body: string;
     created_at: string;
     author_id: string;
+    deleted_at: string | null;
     autor: { full_name: string; role: Role } | null;
   };
 
@@ -145,6 +147,7 @@ export async function getOcorrenciaDetalhe(
     author_id: comentario.author_id,
     autor_nome: comentario.autor?.full_name ?? "—",
     autor_role: comentario.autor?.role ?? "proprietario",
+    deleted_at: comentario.deleted_at,
   }));
 
   return {

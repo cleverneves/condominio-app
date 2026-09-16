@@ -366,6 +366,40 @@ export async function comentarOcorrenciaAction(
 }
 
 /**
+ * Spec 10 - Regra 16 (revisada, decisao "questiona"): o proprio autor
+ * apaga (soft delete) o comentario que escreveu, em qualquer status da
+ * ocorrencia, sem janela de tempo. Nunca apaga o de outro - o filtro
+ * por author_id abaixo e reforcado pela RLS/trigger da migration 00009.
+ */
+export async function apagarComentarioAction(
+  occurrenceId: number,
+  commentId: number
+): Promise<OcorrenciaActionResult> {
+  const profile = await getSessionProfile();
+  if (!profile) return { success: false, message: "Sessão expirada." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("occurrence_comments")
+    .update({ deleted_at: new Date().toISOString() })
+    .eq("id", commentId)
+    .eq("occurrence_id", occurrenceId)
+    .eq("author_id", profile.id)
+    .is("deleted_at", null);
+
+  if (error) {
+    return {
+      success: false,
+      message: "Não foi possível apagar o comentário. Tente novamente.",
+    };
+  }
+
+  revalidatePath(`/ocorrencias/${occurrenceId}`);
+  revalidatePath("/dashboard");
+  return { success: true, message: "Comentário apagado." };
+}
+
+/**
  * Spec 08 - detalhe buscado a partir de um clique na lista (sem navegar
  * de pagina, ja que a gaveta/modal precisa dos dados no cliente). RLS de
  * cada tabela ja restringe o retorno a quem pode ver a ocorrencia.
