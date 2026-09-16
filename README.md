@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CondoResolve
 
-## Getting Started
+Sistema web para **um único condomínio** registrar, acompanhar e atender
+ocorrências (vazamento, barulho, obra, etc.), substituindo o WhatsApp/
+telefone/recado na portaria. Moradores abrem chamados e acompanham o
+status; o administrativo vê tudo, filtra, comenta e resolve.
 
-First, run the development server:
+Visão completa do produto: [`docs/project-overview.md`](./docs/project-overview.md).
+
+## Stack
+
+Next.js 16 (App Router) + React 19 + TypeScript + Tailwind CSS v4 +
+shadcn/ui + Supabase (Auth, Postgres, Storage). Detalhes de arquitetura,
+estrutura de pastas e modelo de dados: [`docs/architecture.md`](./docs/architecture.md).
+
+## Como rodar localmente
+
+### 1. Pré-requisitos
+
+- Node.js e npm.
+- Um projeto [Supabase](https://supabase.com) (cloud ou local via
+  [Supabase CLI](https://supabase.com/docs/guides/cli)).
+
+### 2. Variáveis de ambiente
+
+Copie `.env.example` para `.env` e preencha:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+  `SUPABASE_SERVICE_ROLE_KEY` — credenciais do seu projeto Supabase.
+- `NEXT_PUBLIC_CONDOMINIO_NOME` — nome exibido no shell administrativo e
+  do morador.
+- `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD` — credenciais do funcionário
+  administrativo criado pelo seed (troque a senha em produção).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 3. Banco de dados
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Aplique as migrations e o seed em `supabase/` (via Supabase CLI ou pelo
+SQL Editor do painel Supabase, na ordem numérica de
+`supabase/migrations/`, seguido de `supabase/seed.sql`). Isso cria as
+tabelas, RLS, bucket de imagens e o único administrativo da implantação.
 
-## Learn More
+### 4. Instalar e rodar
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Abra [http://localhost:3000](http://localhost:3000) e entre com o e-mail
+e senha do administrativo (`SEED_ADMIN_EMAIL`/`SEED_ADMIN_PASSWORD`).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Documentação
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [`docs/project-overview.md`](./docs/project-overview.md) — o que o
+  produto faz, perfis de acesso e ciclo de vida da ocorrência.
+- [`docs/architecture.md`](./docs/architecture.md) — stack, estrutura de
+  pastas, autenticação/RLS e modelo de dados.
+- [`docs/DESIGN.md`](./docs/DESIGN.md) — sistema visual (cor, tipografia,
+  componentes, layout) — fonte da verdade para qualquer UI nova.
+- [`docs/prd/condominio-app.md`](./docs/prd/condominio-app.md) — PRD com
+  regras de negócio, fluxos e specs funcionais detalhadas (01–10).
