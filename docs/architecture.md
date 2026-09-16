@@ -57,8 +57,18 @@ componentes de domínio reutilizáveis entre páginas (ex.: `status-badge.tsx`,
 false`, aplicando a Regra 7 do PRD). `requireAdmin()` e
    `requireMorador()` chamam isso nos `layout.tsx` de cada grupo de rota e
    redirecionam quem está no shell errado.
-3. **RLS no Postgres** (`supabase/migrations/00007_rls_policies.sql`) —
-   última linha de defesa, independente do código da aplicação.
+3. **RLS no Postgres** (`supabase/migrations/00007_rls_policies.sql`,
+   reforçada em `00010_inactive_profile_cannot_write.sql`) — última linha
+   de defesa, independente do código da aplicação. Perfil inativo ainda
+   pode **ler** o próprio cadastro (o login precisa distinguir
+   “desativado” de “credencial errada”), mas **não grava** ocorrência,
+   comentário nem imagem. `private.is_admin()` exige `is_active`.
+
+Desativar um morador apaga as linhas em `auth.sessions` (trigger
+`profiles_revoke_sessions_on_deactivate`): o refresh token deixa de
+renovar. O access token já emitido permanece válido até o `exp`; nesse
+intervalo a RLS acima é o que impede escrita. O único administrativo não
+pode ser desativado (Regra 4).
 
 Clientes Supabase (`src/lib/supabase/`):
 

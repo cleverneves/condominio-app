@@ -27,7 +27,8 @@ de senha por e-mail (quem esquece procura a administração).
 
 - Login, sessão e redirecionamento por perfil; bloqueio de área alheia.
 - Administrativo: cadastrar, editar, listar, redefinir senha e
-  ativar/desativar morador (histórico de ocorrências nunca é apagado).
+  ativar/desativar morador (histórico de ocorrências nunca é apagado;
+  desativar encerra as sessões abertas).
 - Morador: abrir ocorrência (título, detalhes, categoria, local, até 3
   imagens JPEG/PNG ≤ 5 MB), listar e ver detalhe das próprias, editar ou
   cancelar enquanto **Pendente**.
