@@ -1,17 +1,11 @@
 "use server";
 
-import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
-
-export const redefinirSenhaSchema = z.object({
-  id: z.string().uuid(),
-  password: z
-    .string()
-    .min(6, "A nova senha precisa ter pelo menos 6 caracteres."),
-});
-
-export type RedefinirSenhaInput = z.infer<typeof redefinirSenhaSchema>;
+import {
+  redefinirSenhaSchema,
+  type RedefinirSenhaInput,
+} from "./redefinir-senha-schema";
 
 export interface RedefinirSenhaResult {
   success: boolean;

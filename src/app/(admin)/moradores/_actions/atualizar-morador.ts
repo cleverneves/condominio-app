@@ -1,28 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/session";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
-
-export const atualizarMoradorSchema = z.object({
-  id: z.string().uuid(),
-  role: z.enum(["proprietario", "inquilino"], {
-    message: "Selecione o tipo do morador.",
-  }),
-  full_name: z.string().trim().min(3, "Informe o nome completo."),
-  email: z
-    .string()
-    .trim()
-    .min(1, "Informe o e-mail.")
-    .email("Informe um e-mail válido."),
-  phone: z.string().trim().min(8, "Informe um telefone válido."),
-  bloco: z.string().trim().min(1, "Informe o bloco."),
-  apartamento: z.string().trim().min(1, "Informe o apartamento."),
-});
-
-export type AtualizarMoradorInput = z.infer<typeof atualizarMoradorSchema>;
+import {
+  atualizarMoradorSchema,
+  type AtualizarMoradorInput,
+} from "./atualizar-morador-schema";
 
 export interface AtualizarMoradorResult {
   success: boolean;

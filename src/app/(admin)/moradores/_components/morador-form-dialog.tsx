@@ -94,30 +94,34 @@ export function MoradorFormDialog({
   }, [open, morador]);
 
   async function onSubmit(values: FormValues) {
-    const result =
-      mode === "create"
-        ? await criarMoradorAction({
-            ...values,
-            password: values.password ?? "",
-          })
-        : await atualizarMoradorAction({ ...values, id: morador!.id });
+    try {
+      const result =
+        mode === "create"
+          ? await criarMoradorAction({
+              ...values,
+              password: values.password ?? "",
+            })
+          : await atualizarMoradorAction({ ...values, id: morador!.id });
 
-    if (!result.success) {
-      if (result.errors) {
-        for (const [field, message] of Object.entries(result.errors)) {
-          if (message) {
-            form.setError(field as keyof FormValues, { message });
+      if (!result.success) {
+        if (result.errors) {
+          for (const [field, message] of Object.entries(result.errors)) {
+            if (message) {
+              form.setError(field as keyof FormValues, { message });
+            }
           }
         }
+        toast.error(
+          result.message ?? "Não foi possível salvar. Tente novamente."
+        );
+        return;
       }
-      toast.error(
-        result.message ?? "Não foi possível salvar. Tente novamente."
-      );
-      return;
-    }
 
-    toast.success(result.message ?? "Feito.");
-    onOpenChange(false);
+      toast.success(result.message ?? "Feito.");
+      onOpenChange(false);
+    } catch {
+      toast.error("Não foi possível salvar. Tente novamente.");
+    }
   }
 
   const errors = form.formState.errors;
