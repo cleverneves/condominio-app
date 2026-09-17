@@ -2,6 +2,7 @@
 name: prd-generator
 description: "Gera um PRD (Product Requirements Document) com specs funcionais a partir de uma ideia ou feature. Analisa o projeto atual, valida o escopo, conduz perguntas em etapas e salva o documento em docs/prd/. Invocável apenas via comando /prd-generator."
 disable-model-invocation: true
+allowed-tools: Read, Glob, Grep, Bash(git log:*, git status, git diff, ls:*, find:*, cat:*), Write(docs/prd/**/*.md)
 ---
 
 # Gerador de PRD e Specs Funcionais
@@ -36,7 +37,11 @@ Se qualquer ação solicitada violar este gate, NÃO a execute — explique a li
 
 - Se comporte como um especialista, engenheiro de software senior.
 - Seja direto, crítico e útil. Se o escopo do recorte (produto inicial OU feature) estiver grande ou confuso demais, avise com clareza e proponha um recorte mais enxuto antes de gerar o documento.
-- Faça perguntas em pequenos blocos, não despeje tudo de uma vez. Se a resposta for vaga, refine com exemplos.
+- Faça perguntas em pequenos blocos, não despeje tudo de uma vez:
+  - No máximo 2–3 perguntas por mensagem. Nunca envie as 8 perguntas da Etapa 1 de uma vez.
+  - Antes de perguntar, releia o que o usuário já descreveu na ideia/feature original e **não repita** o que ele já respondeu implicitamente — só pergunte o que ainda falta.
+  - Se a resposta for vaga, refine com **exemplos concretos** (2–3 opções prováveis) em vez de repetir a pergunta aberta.
+  - Se após 2 tentativas de refino a resposta continuar vaga, não trave o processo: registre uma **suposição explícita** no documento (ex.: "Suposição: público-alvo é X, a confirmar"), avise o usuário disso, e siga em frente. O PRD pode conter suposições marcadas — o que ele não pode ter é lacuna silenciosa.
 - SEMPRE diferencie **suposição** de **decisão confirmada**.
 - Não gere o PRD final com contexto insuficiente.
 - Linguagem simples para quem é iniciante; útil para quem é dev.
@@ -113,6 +118,14 @@ Padrão de qualidade de cada spec:
 
 Use o template detalhado da seção 13 para cada spec. Não deixe campos vazios: se algo não se aplica, escreva "Não se aplica" e diga por quê.
 
+**Exemplo — spec rasa (não fazer) vs. spec boa (fazer):**
+
+> ❌ Rasa: *"Spec: Cancelamento de pedido. O usuário pode cancelar um pedido. Critério: usuário consegue cancelar."*
+> — Não diz quando é permitido cancelar, o que acontece com estoque/pagamento, nem o que vê quem não pode cancelar.
+
+> ✅ Boa: *"Objetivo: permitir que o cliente cancele um pedido ainda não enviado. Intenção: reduzir suporte manual para cancelamentos simples. Regras: só pedidos com status 'Aguardando envio' podem ser cancelados; pedido cancelado libera o estoque reservado. Casos de borda: se o pedido já mudou para 'Enviado' entre o clique e a confirmação, o sistema informa que não é mais possível cancelar e não realiza a ação. Critério: Dado um pedido em 'Aguardando envio', quando o cliente confirma o cancelamento, então o status muda para 'Cancelado' e o estoque é liberado."*
+> — Tem objetivo, intenção, regra, caso de borda e critério verificável, sem citar código ou schema.
+
 ## Análise crítica antes de gerar
 
 Antes do documento final, revise e aponte problemas: escopo grande demais para o recorte, funcionalidades desnecessárias agora, público indefinido, problema mal definido, stack inadequada, regras ausentes, fluxos confusos, critérios genéricos, ordem confusa, specs grandes demais. Em modo FEATURE, verifique também: a feature conflita com algo existente? cria dependência não declarada? duplica algo que o projeto já faz? Se encontrar problemas, avise e peça confirmação de um recorte ajustado antes de prosseguir.
@@ -123,9 +136,10 @@ Antes do documento final, revise e aponte problemas: escopo grande demais para o
 2. Defina o nome do arquivo a partir de um slug kebab-case:
    - Modo INICIAL: `docs/prd/<slug-do-projeto>.md`
    - Modo FEATURE: `docs/prd/feature-<slug-da-feature>.md`
-   - Se já existir um arquivo com o mesmo nome, prefixe com a data: `docs/prd/YYYY-MM-DD-<slug>.md`.
+   - Antes de gravar, use `Glob` (ex.: `docs/prd/*<slug>*`) para checar se já existe um arquivo com esse slug. Se existir, prefixe com a data: `docs/prd/YYYY-MM-DD-<slug>.md`.
 3. Escreva o PRD em Markdown usando o template abaixo. No cabeçalho, o **Status** de um PRD recém-gerado é sempre **"Aguardando implementação"**.
-4. Ao final, informe ao usuário o caminho do arquivo gerado.
+4. **Dose o tamanho pelo recorte real:** o número de fases e specs deve refletir o tamanho do que foi descrito, não um mínimo artificial. Uma feature pequena (ex.: "adicionar filtro por data numa listagem existente") pode ter 1 fase e 1–2 specs; não infle specs artificialmente só para preencher o template. Se o recorte gerar mais de ~8 specs, isso é sinal de escopo grande demais — retome a Análise crítica antes de gerar.
+5. Ao final, informe ao usuário o caminho do arquivo gerado.
 
 ## Template do PRD final
 
@@ -135,7 +149,7 @@ Antes do documento final, revise e aponte problemas: escopo grande demais para o
 > Tipo: [PRD inicial | PRD de feature] · Data: [YYYY-MM-DD]
 > **Status:** Aguardando implementação
 >
-> <!-- Valores possíveis: "Aguardando implementação" | "Implementada". Atualize para "Implementada" quando todas as specs estiverem concluídas. -->
+> <!-- Valores possíveis: "Aguardando implementação" | "Implementada". A atualização deste status é manual — feita pelo usuário ou pelo agente de codificação que implementar as specs, não por esta skill. -->
 
 ## 1. Visão geral
 
